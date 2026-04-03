@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/HolisticProfile.Console/HolisticProfile.Console.csproj" />
+    <Project Path="src/HolisticProfile.Core/HolisticProfile.Core.csproj" />
+    <Project Path="src/HolisticProfile.Infrastructure/HolisticProfile.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HolisticProfile.Core.Tests/HolisticProfile.Core.Tests.csproj" />
+    <Project Path="tests/HolisticProfile.Infrastructure.Tests/HolisticProfile.Infrastructure.Tests.csproj" />
+  </Folder>
+</Solution>
