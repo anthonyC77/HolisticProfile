@@ -80,8 +80,35 @@ public class MillmanPromptBuilderTests
 
         var prompt = _builder.Build(profile, "contenu");
 
-        // Le prompt doit demander une réponse en français
         prompt.Should().ContainAny("français", "french", "French");
+    }
+
+    [Fact]
+    public void Build_ExplainsMillmanNotation_SumThenRoot()
+    {
+        // Le LLM ne doit pas pouvoir inverser la notation : 16/7 signifie somme=16, racine=7
+        var profile = MakeProfile(new DateTime(2004, 1, 9)); // 16/7
+
+        var prompt = _builder.Build(profile, null);
+
+        // Le prompt doit expliquer explicitement que le premier chiffre est la somme, le second la racine
+        prompt.Should().Contain("16");
+        prompt.Should().Contain("somme");
+        prompt.Should().Contain("racine");
+    }
+
+    [Fact]
+    public void Build_NotationNeverInverted_PathAppearsSumFirst()
+    {
+        // 16/7 : le chemin doit apparaître comme "16/7", jamais comme "Chemin de vie Millman : 7"
+        var profile = MakeProfile(new DateTime(2004, 1, 9)); // 16/7
+
+        var prompt = _builder.Build(profile, null);
+
+        // La notation complète doit être présente
+        prompt.Should().Contain("16/7");
+        // Le prompt doit mentionner explicitement que 16 est la somme
+        prompt.Should().Contain("somme=16");
     }
 
     private BirthProfile MakeProfile(DateTime date)

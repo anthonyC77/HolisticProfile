@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C d:/ProjetAnanlysePersonnalisé status)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}

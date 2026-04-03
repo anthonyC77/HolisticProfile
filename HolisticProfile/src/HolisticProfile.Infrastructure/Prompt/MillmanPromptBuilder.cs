@@ -16,15 +16,27 @@ public class MillmanPromptBuilder : IPromptBuilder
         sb.AppendLine("Évite le jargon technique sauf si contextualisé.");
         sb.AppendLine();
 
+        sb.AppendLine("## Notation Millman — à lire attentivement");
+        sb.AppendLine("Dans le système Dan Millman, la notation A/B signifie :");
+        sb.AppendLine("  - A = somme brute de tous les chiffres de la date de naissance");
+        sb.AppendLine("  - B = racine obtenue par réduction de A (ex: 16 → 1+6 = 7)");
+        sb.AppendLine("IMPORTANT : ne jamais inverser cette notation. 16/7 n'est pas 7/16.");
+        sb.AppendLine();
+
         sb.AppendLine("## Profil calculé");
         sb.AppendLine($"Date de naissance : {profile.BirthDate:dd/MM/yyyy}");
-        sb.AppendLine($"Chemin de vie Millman : {profile.MillmanLifePath}");
 
-        if (profile.MillmanLifePath.IntermediateSum.HasValue)
+        var lp = profile.MillmanLifePath;
+        if (lp.IntermediateSum.HasValue)
         {
-            sb.AppendLine($"(Chemin à 3 niveaux : {profile.MillmanLifePath.Sum} / " +
-                          $"{profile.MillmanLifePath.IntermediateSum} / {profile.MillmanLifePath.Root} — " +
-                          $"chaque niveau porte un sens, les chiffres répétés ont un double poids)");
+            sb.AppendLine($"Chemin de vie Millman : {lp} " +
+                          $"(somme={lp.Sum}, intermédiaire={lp.IntermediateSum}, racine={lp.Root})");
+            sb.AppendLine($"Chemin à 3 niveaux : chaque niveau porte un sens propre. " +
+                          $"Le chiffre {lp.IntermediateSum % 10} est présent deux fois → double poids, double défi.");
+        }
+        else
+        {
+            sb.AppendLine($"Chemin de vie Millman : {lp} (somme={lp.Sum}, racine={lp.Root})");
         }
 
         sb.AppendLine();

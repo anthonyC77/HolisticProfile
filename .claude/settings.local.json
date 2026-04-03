@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet new:*)",
+      "Bash(dotnet sln:*)",
+      "Bash(dotnet add:*)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet build:*)",
+      "Bash(dotnet run:*)",
+      "Bash(dotnet D:/ProjetAnanlysePersonnalisé/HolisticProfile/src/HolisticProfile.Console/bin/Debug/net9.0/HolisticProfile.Console.dll)",
+      "Bash(/dev/null echo:*)",
+      "Bash(dotnet src/HolisticProfile.Console/bin/Debug/net9.0/HolisticProfile.Console.dll)"
+    ]
+  }
+}

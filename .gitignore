@@ -53,3 +53,4 @@ Desktop.ini
 # Secrets / local config
 appsettings.local.json
 *.secrets.json
+/HolisticProfile/cache/syntheses
