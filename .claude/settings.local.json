@@ -9,7 +9,8 @@
       "Bash(dotnet run:*)",
       "Bash(dotnet D:/ProjetAnanlysePersonnalisé/HolisticProfile/src/HolisticProfile.Console/bin/Debug/net9.0/HolisticProfile.Console.dll)",
       "Bash(/dev/null echo:*)",
-      "Bash(dotnet src/HolisticProfile.Console/bin/Debug/net9.0/HolisticProfile.Console.dll)"
+      "Bash(dotnet src/HolisticProfile.Console/bin/Debug/net9.0/HolisticProfile.Console.dll)",
+      "Bash(pdftotext -layout \"d:/ProjetAnanlysePersonnalisé/PROJECT_SPEC_HolisticProfile.pdf\" -)"
     ]
   }
 }

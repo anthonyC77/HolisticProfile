@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
 
+
 var config = new ConfigurationBuilder()
     .SetBasePath(AppContext.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: false)
@@ -14,7 +15,14 @@ var services = new ServiceCollection()
     .BuildServiceProvider();
 
 System.Console.OutputEncoding = System.Text.Encoding.UTF8;
-System.Console.WriteLine("=== HolisticProfile — Numérologie Dan Millman ===");
+System.Console.WriteLine("=== HolisticProfile ===");
+System.Console.WriteLine();
+System.Console.WriteLine("1 — Numérologie Dan Millman");
+System.Console.WriteLine("2 — Référentiel de Naissance (Colleuil)");
+System.Console.WriteLine();
+System.Console.Write("Choix (1 ou 2) : ");
+
+var choice = System.Console.ReadLine()?.Trim();
 System.Console.WriteLine();
 
 DateTime birthDate;
@@ -33,24 +41,42 @@ while (true)
 System.Console.WriteLine();
 System.Console.WriteLine("Calcul en cours...");
 
-var synthesisService = services.GetRequiredService<ISynthesisService>();
+var width = 80;
+try { width = Math.Clamp(System.Console.WindowWidth - 2, 40, 80); } catch { /* redirigé */ }
 
 try
 {
     using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
 
-    var result = await synthesisService.RunAsync(birthDate, cts.Token);
+    if (choice == "2")
+    {
+        var referentielService = services.GetRequiredService<IReferentielSynthesisService>();
+        var result = await referentielService.RunAsync(birthDate, cts.Token);
 
-    System.Console.WriteLine();
-    System.Console.WriteLine($"Chemin de vie Millman : {result.Profile.MillmanLifePath}");
-    // Largeur A4 ≈ 80 colonnes (max fixé à 80 pour éviter les débordements de buffer console)
-    var width = 80;
-    try { width = Math.Clamp(System.Console.WindowWidth - 2, 40, 80); } catch { /* redirigé */ }
-    System.Console.WriteLine(new string('─', width));
-    System.Console.WriteLine();
-    PrintWrapped(result.Text, lineWidth: width);
-    System.Console.WriteLine();
-    System.Console.WriteLine(new string('─', width));
+        System.Console.WriteLine();
+        System.Console.WriteLine($"Référentiel de Naissance — {result.Profile.BirthDate:dd/MM/yyyy} (année {result.Profile.CurrentYear})");
+        System.Console.WriteLine();
+        foreach (var house in result.Profile.Houses)
+            System.Console.WriteLine($"  {house}");
+        System.Console.WriteLine(new string('─', width));
+        System.Console.WriteLine();
+        PrintWrapped(result.Text, lineWidth: width);
+        System.Console.WriteLine();
+        System.Console.WriteLine(new string('─', width));
+    }
+    else
+    {
+        var synthesisService = services.GetRequiredService<ISynthesisService>();
+        var result = await synthesisService.RunAsync(birthDate, cts.Token);
+
+        System.Console.WriteLine();
+        System.Console.WriteLine($"Chemin de vie Millman : {result.Profile.MillmanLifePath}");
+        System.Console.WriteLine(new string('─', width));
+        System.Console.WriteLine();
+        PrintWrapped(result.Text, lineWidth: width);
+        System.Console.WriteLine();
+        System.Console.WriteLine(new string('─', width));
+    }
 }
 catch (HttpRequestException ex)
 {

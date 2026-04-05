@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
+
 namespace HolisticProfile.Console;
 
 public static class ServiceRegistration
@@ -52,6 +53,27 @@ public static class ServiceRegistration
         });
 
         services.AddTransient<ISynthesisService, SynthesisService>();
+
+        // --- Référentiel de Naissance ---
+        services.Configure<ReferentielKnowledgeBaseOptions>(config.GetSection("ReferentielKnowledgeBase"));
+        services.Configure<ReferentielSynthesisCacheOptions>(config.GetSection("ReferentielSynthesisCache"));
+
+        services.AddSingleton<IReferentielCalculationEngine, ReferentielCalculationEngine>();
+        services.AddSingleton<IReferentielPromptBuilder, ReferentielPromptBuilder>();
+
+        services.AddSingleton<IReferentielKnowledgeBaseRepository>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<ReferentielKnowledgeBaseOptions>>().Value;
+            return new ReferentielKnowledgeBaseRepository(opts.BasePath);
+        });
+
+        services.AddSingleton<IReferentielSynthesisCacheRepository>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<ReferentielSynthesisCacheOptions>>().Value;
+            return new ReferentielSynthesisCacheRepository(opts.BasePath);
+        });
+
+        services.AddTransient<IReferentielSynthesisService, ReferentielSynthesisService>();
 
         return services;
     }
