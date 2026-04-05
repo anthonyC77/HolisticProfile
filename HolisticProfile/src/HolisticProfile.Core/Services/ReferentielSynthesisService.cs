@@ -40,7 +40,10 @@ public class ReferentielSynthesisService : IReferentielSynthesisService
         if (cached is not null)
             return new ReferentielSynthesisResult(profile, cached);
 
-        var knowledge = await _knowledgeRepo.LoadProfileContentAsync(profile);
+        // Maisons clés pour la synthèse thérapeutique — évite un prompt trop lourd pour le LLM local
+        // M4=mission, M5=passage obligé, M6=ressources, M8=année, M9=soi profond, M10=ombre, M14=ressource universelle
+        var keyHouses = new[] { 4, 5, 6, 8, 9, 10, 14 };
+        var knowledge = await _knowledgeRepo.LoadKeyHousesContentAsync(profile, keyHouses);
         var prompt    = _promptBuilder.Build(profile, knowledge);
         var text      = await _llmClient.GenerateAsync(prompt, cancellationToken);
 

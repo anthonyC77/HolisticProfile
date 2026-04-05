@@ -79,6 +79,50 @@ public class ReferentielKnowledgeBaseRepository : IReferentielKnowledgeBaseRepos
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Charge uniquement les maisons spécifiées (par numéro) pour alléger le prompt LLM.
+    /// </summary>
+    public async Task<string> LoadKeyHousesContentAsync(
+        ReferentielNaissanceProfile profile,
+        IEnumerable<int> houseNumbers)
+    {
+        var sb = new System.Text.StringBuilder();
+        var numbers = houseNumbers.ToHashSet();
+
+        foreach (var house in profile.Houses.Where(h => numbers.Contains(h.HouseNumber)))
+        {
+            sb.AppendLine($"## Maison {house.HouseNumber} — {house.HouseName}");
+
+            if (house.Major is not null)
+            {
+                sb.AppendLine($"**Arcane :** {house.Major}");
+                sb.AppendLine();
+
+                var arcaneContent   = await LoadArcaneAsync(house.Major.Numero);
+                var positionContent = await LoadPositionAsync(house.HouseNumber);
+
+                if (!string.IsNullOrWhiteSpace(arcaneContent))
+                    sb.AppendLine(arcaneContent);
+
+                if (!string.IsNullOrWhiteSpace(positionContent))
+                    sb.AppendLine(positionContent);
+            }
+            else if (house.Minor is not null)
+            {
+                sb.AppendLine($"**Arcane Mineur :** {house.Minor}");
+                sb.AppendLine();
+
+                var positionContent = await LoadPositionAsync(house.HouseNumber);
+                if (!string.IsNullOrWhiteSpace(positionContent))
+                    sb.AppendLine(positionContent);
+            }
+
+            sb.AppendLine();
+        }
+
+        return sb.ToString();
+    }
+
     private async Task<string?> LoadByPrefixAsync(string directory, string prefix)
     {
         if (!Directory.Exists(directory))
