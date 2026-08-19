@@ -20,6 +20,13 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <!-- Table des lieux : testée telle qu'elle est livrée -->
+  <ItemGroup>
+    <None Include="..\..\data\places\cities.json" Link="data\places\cities.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\HolisticProfile.Infrastructure\HolisticProfile.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\HolisticProfile.Core\HolisticProfile.Core.csproj" />

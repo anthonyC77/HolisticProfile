@@ -8,9 +8,14 @@ Logiciel desktop d'analyse personnalisée multi-référentielle, assisté par un
 | Référentiel | Statut |
 |---|---|
 | Numérologie Dan Millman | Phase 1 — disponible |
-| Référentiel de naissance | Phase 2 — en cours |
+| Référentiel de naissance | Phase 2 — disponible |
+| Astrologie (thème natal) | Phase 3 — disponible |
 | Design Humain | Prévu |
-| Astrologie | Prévu |
+
+Pour le thème natal, le lieu de naissance se saisit **par son nom** : une table locale de 213 villes
+(France, DOM-TOM et principales villes du monde) fournit les coordonnées et le fuseau, et le décalage
+UTC est calculé selon les règles horaires **historiques** du lieu (heure d'été, réformes anciennes).
+Les heures ambiguës ou inexistantes lors d'un changement d'heure sont signalées.
 
 ## Prérequis
 

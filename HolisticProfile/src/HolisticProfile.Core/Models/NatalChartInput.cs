@@ -18,7 +18,11 @@ public record NatalChartInput(
     /// <summary>Date/heure en Temps Universel (UT).</summary>
     public DateTime BirthDateTimeUT => BirthDateTimeLocal - UtcOffset;
 
-    /// <summary>Clé unique pour le cache — inclut heure et lieu.</summary>
+    /// <summary>
+    /// Clé unique pour le cache — inclut heure, lieu et décalage UTC.
+    /// Le décalage en fait partie : un même lieu à une même heure donne un thème
+    /// différent selon le fuseau retenu (heure d'été, correction de saisie).
+    /// </summary>
     public string CacheKey
     {
         get
@@ -26,7 +30,14 @@ public record NatalChartInput(
             var dt  = BirthDateTimeLocal.ToString("dd_MM_yyyy_HHmm");
             var lat = Latitude.ToString("F4", System.Globalization.CultureInfo.InvariantCulture).Replace('.', 'p');
             var lon = Longitude.ToString("F4", System.Globalization.CultureInfo.InvariantCulture).Replace('.', 'p');
-            return $"{dt}_{lat}_{lon}";
+
+            var abs  = UtcOffset.Duration();
+            var sign = UtcOffset < TimeSpan.Zero ? "m" : "p";
+            var off  = abs.Seconds == 0
+                ? $"utc{sign}{abs.Hours:D2}{abs.Minutes:D2}"
+                : $"utc{sign}{abs.Hours:D2}{abs.Minutes:D2}{abs.Seconds:D2}";
+
+            return $"{dt}_{lat}_{lon}_{off}";
         }
     }
 

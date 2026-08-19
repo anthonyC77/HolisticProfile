@@ -5,6 +5,7 @@ using HolisticProfile.Infrastructure.Cache;
 using HolisticProfile.Infrastructure.Engines;
 using HolisticProfile.Infrastructure.KnowledgeBase;
 using HolisticProfile.Infrastructure.LlmClients;
+using HolisticProfile.Infrastructure.Places;
 using HolisticProfile.Infrastructure.Prompt;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -103,6 +104,23 @@ public static class ServiceRegistration
         });
 
         services.AddTransient<IAstrologySynthesisService, AstrologySynthesisService>();
+
+        // --- Lieux de naissance & fuseaux horaires ---
+        services.Configure<PlaceOptions>(config.GetSection("Places"));
+
+        services.AddSingleton<IPlaceRepository>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<PlaceOptions>>().Value;
+
+            // Par défaut : la table livrée avec l'application (copiée à côté de l'exécutable)
+            var path = string.IsNullOrWhiteSpace(opts.FilePath)
+                ? Path.Combine(AppContext.BaseDirectory, "data", "places", "cities.json")
+                : opts.FilePath;
+
+            return new JsonPlaceRepository(path);
+        });
+
+        services.AddSingleton<IBirthTimeZoneResolver>(_ => new NodaTimeZoneResolver());
 
         return services;
     }

@@ -12,10 +12,10 @@ en croisant plusieurs référentiels :
 
 | Référentiel | Statut |
 |---|---|
-| Numérologie Dan Millman | **POC Phase 1 — implémenté** |
-| Référentiel de naissance | Prévu Phase 2 |
+| Numérologie Dan Millman | **Phase 1 — implémenté** |
+| Référentiel de naissance | **Phase 2 — implémenté** |
+| Astrologie | **Phase 3 — implémenté** |
 | Design Humain | Prévu |
-| Astrologie | Prévu |
 | Croisement huiles essentielles | Prévu |
 | Tests psychologiques / structure psy | Prévu |
 
@@ -143,6 +143,51 @@ Chaque fiche suit une structure standardisée :
 - Axe de travail thérapeutique
 - Leviers d'action
 - Note clinique
+
+---
+
+## Lieu de naissance et fuseau horaire (thème natal)
+
+Le décalage UTC conditionne directement l'Ascendant : **une heure d'erreur déplace l'ASC d'environ 15°**,
+soit souvent une maison entière. Il n'est donc jamais demandé au praticien — il est déduit du lieu.
+
+### Table des lieux
+
+`data/places/cities.json` — 213 lieux (128 en France, préfectures + grandes villes + DOM-TOM,
+plus les principales villes du monde). Chaque entrée porte le nom, la région, le pays,
+les coordonnées décimales et l'**identifiant IANA du fuseau** (ex : `Europe/Paris`).
+
+Le fichier est copié à côté de l'exécutable (`data/places/cities.json`) et chargé par défaut depuis là.
+`Places:FilePath` dans `appsettings.json` permet de pointer une autre table.
+
+La recherche (`JsonPlaceRepository`) ignore casse, accents et tirets, et comprend `st` pour `saint`
+(« st etienne » → Saint-Étienne). Ordre : nom exact, début de nom, début d'un mot, contenu, région/pays.
+
+**Ajouter une ville** : une ligne dans le JSON. Les tests `CitiesDataTests` vérifient que chaque fuseau
+existe dans la TZDB, que les coordonnées sont valides et qu'il n'y a pas de doublon.
+
+### Résolution du décalage
+
+`NodaTimeZoneResolver` s'appuie sur la base **TZDB embarquée dans NodaTime**, et non sur `TimeZoneInfo` :
+Windows ne conserve pas les règles anciennes et donnerait un décalage faux pour la plupart des naissances
+avant les années 2000. Sont ainsi correctement restitués :
+
+- l'absence d'heure d'été en France entre 1946 et 1975 (réintroduite le 28 mars 1976) ;
+- l'heure du méridien de Paris (+0h09'21") avant le 11 mars 1911 ;
+- les règles propres à chaque pays (l'heure d'été US commençait en avril jusqu'en 2006, etc.).
+
+Deux cas limites sont signalés au praticien plutôt que tranchés en silence :
+
+| Cas | Situation | Comportement |
+|---|---|---|
+| `Ambiguous` | Heure vécue deux fois (retour à l'heure d'hiver) | Les deux décalages sont proposés, le premier par défaut |
+| `Skipped` | Heure inexistante (passage à l'heure d'été) | Alerte + proposition de ressaisir l'heure |
+
+Si le lieu n'est pas dans la table, `*` ouvre la saisie manuelle : latitude, longitude,
+puis fuseau IANA (validé immédiatement) ou décalage brut.
+
+Le décalage retenu fait partie de la clé de cache (`NatalChartInput.CacheKey`) : deux décalages
+donnent deux thèmes différents, qui ne doivent pas se confondre en cache.
 
 ---
 
