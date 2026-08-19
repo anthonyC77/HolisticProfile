@@ -2,6 +2,7 @@ using HolisticProfile.Core.Engines;
 using HolisticProfile.Core.Interfaces;
 using HolisticProfile.Core.Services;
 using HolisticProfile.Infrastructure.Cache;
+using HolisticProfile.Infrastructure.Engines;
 using HolisticProfile.Infrastructure.KnowledgeBase;
 using HolisticProfile.Infrastructure.LlmClients;
 using HolisticProfile.Infrastructure.Prompt;
@@ -74,6 +75,34 @@ public static class ServiceRegistration
         });
 
         services.AddTransient<IReferentielSynthesisService, ReferentielSynthesisService>();
+
+        // --- Astrologie ---
+        services.Configure<AstrologyKnowledgeBaseOptions>(config.GetSection("AstrologyKnowledgeBase"));
+        services.Configure<AstrologySynthesisCacheOptions>(config.GetSection("AstrologySynthesisCache"));
+
+        services.AddSingleton<IAstrologyCalculationEngine>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<AstrologyKnowledgeBaseOptions>>().Value;
+            // EphemerisPath optionnel : si vide, Moshier est utilisé (aucun fichier requis)
+            var ephPath = config["Astrology:EphemerisPath"];
+            return new SwissEphAstrologyCalculationEngine(ephPath);
+        });
+
+        services.AddSingleton<IAstrologyPromptBuilder, AstrologyPromptBuilder>();
+
+        services.AddSingleton<IAstrologyKnowledgeBaseRepository>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<AstrologyKnowledgeBaseOptions>>().Value;
+            return new AstrologyKnowledgeBaseRepository(opts.BasePath);
+        });
+
+        services.AddSingleton<IAstrologySynthesisCacheRepository>(sp =>
+        {
+            var opts = sp.GetRequiredService<IOptions<AstrologySynthesisCacheOptions>>().Value;
+            return new AstrologySynthesisCacheRepository(opts.BasePath);
+        });
+
+        services.AddTransient<IAstrologySynthesisService, AstrologySynthesisService>();
 
         return services;
     }

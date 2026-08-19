@@ -1,5 +1,6 @@
 using HolisticProfile.Console;
 using HolisticProfile.Core.Interfaces;
+using HolisticProfile.Core.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Globalization;
@@ -19,8 +20,9 @@ System.Console.WriteLine("=== HolisticProfile ===");
 System.Console.WriteLine();
 System.Console.WriteLine("1 — Numérologie Dan Millman");
 System.Console.WriteLine("2 — Référentiel de Naissance (Colleuil)");
+System.Console.WriteLine("3 — Thème Natal Astrologique");
 System.Console.WriteLine();
-System.Console.Write("Choix (1 ou 2) : ");
+System.Console.Write("Choix (1, 2 ou 3) : ");
 
 var choice = System.Console.ReadLine()?.Trim();
 System.Console.WriteLine();
@@ -38,6 +40,11 @@ while (true)
     System.Console.WriteLine("  Format invalide, réessaie (ex: 15/03/1987)");
 }
 
+// Données supplémentaires pour l'astrologie
+NatalChartInput? natalInput = null;
+if (choice == "3")
+    natalInput = ReadNatalChartInput(birthDate);
+
 System.Console.WriteLine();
 System.Console.WriteLine("Calcul en cours...");
 
@@ -48,7 +55,30 @@ try
 {
     using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
 
-    if (choice == "2")
+    if (choice == "3" && natalInput is not null)
+    {
+        var astroService = services.GetRequiredService<IAstrologySynthesisService>();
+        var result = await astroService.RunAsync(natalInput, cts.Token);
+
+        System.Console.WriteLine();
+        System.Console.WriteLine($"Thème Natal — {result.Profile.Input}");
+        System.Console.WriteLine();
+        System.Console.WriteLine($"  ASC : {result.Profile.Ascendant.DegreeInSign:F1}° {result.Profile.Ascendant.Sign.ToFrench()}");
+        System.Console.WriteLine($"  MC  : {result.Profile.MidHeaven.DegreeInSign:F1}° {result.Profile.MidHeaven.Sign.ToFrench()}");
+        System.Console.WriteLine();
+        foreach (var planet in result.Profile.Planets)
+            System.Console.WriteLine($"  {planet}");
+        System.Console.WriteLine();
+        System.Console.WriteLine("  Aspects principaux :");
+        foreach (var aspect in result.Profile.Aspects.Take(8))
+            System.Console.WriteLine($"    {aspect}");
+        System.Console.WriteLine(new string('─', width));
+        System.Console.WriteLine();
+        PrintWrapped(result.Text, lineWidth: width);
+        System.Console.WriteLine();
+        System.Console.WriteLine(new string('─', width));
+    }
+    else if (choice == "2")
     {
         var referentielService = services.GetRequiredService<IReferentielSynthesisService>();
         var result = await referentielService.RunAsync(birthDate, cts.Token);
@@ -118,6 +148,64 @@ static void PrintWrapped(string text, int lineWidth)
         // Tout le reste (paragraphes, texte en **gras**, etc.) → word-wrap
         WrapLine(trimmed, lineWidth);
     }
+}
+
+static NatalChartInput ReadNatalChartInput(DateTime birthDate)
+{
+    // Heure
+    TimeOnly birthTime = default;
+    while (true)
+    {
+        System.Console.Write("Heure de naissance (HH:MM) : ");
+        var raw = System.Console.ReadLine()?.Trim();
+        if (TimeOnly.TryParseExact(raw, "HH:mm", CultureInfo.InvariantCulture, DateTimeStyles.None, out birthTime))
+            break;
+        System.Console.WriteLine("  Format invalide, réessaie (ex: 14:30)");
+    }
+
+    // Décalage UTC
+    int utcOffset = 0;
+    while (true)
+    {
+        System.Console.Write("Décalage UTC en heures (ex: 1 pour Paris hiver, 2 pour Paris été) : ");
+        var raw = System.Console.ReadLine()?.Trim();
+        if (int.TryParse(raw, out utcOffset)) break;
+        System.Console.WriteLine("  Entier attendu (ex: 1, -5, 0)");
+    }
+
+    // Latitude
+    double latitude = 0;
+    while (true)
+    {
+        System.Console.Write("Latitude du lieu de naissance (ex: 48.8566 pour Paris) : ");
+        var raw = System.Console.ReadLine()?.Trim();
+        if (double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out latitude)) break;
+        System.Console.WriteLine("  Nombre décimal attendu (utiliser le point comme séparateur)");
+    }
+
+    // Longitude
+    double longitude = 0;
+    while (true)
+    {
+        System.Console.Write("Longitude du lieu de naissance (ex: 2.3522 pour Paris) : ");
+        var raw = System.Console.ReadLine()?.Trim();
+        if (double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out longitude)) break;
+        System.Console.WriteLine("  Nombre décimal attendu (utiliser le point comme séparateur)");
+    }
+
+    System.Console.Write("Nom du lieu (facultatif, appuie sur Entrée pour sauter) : ");
+    var placeName = System.Console.ReadLine()?.Trim() ?? string.Empty;
+
+    var birthDateTime = new DateTime(
+        birthDate.Year, birthDate.Month, birthDate.Day,
+        birthTime.Hour, birthTime.Minute, 0);
+
+    return new NatalChartInput(
+        birthDateTime,
+        TimeSpan.FromHours(utcOffset),
+        latitude,
+        longitude,
+        placeName);
 }
 
 static void WrapLine(string line, int lineWidth)
